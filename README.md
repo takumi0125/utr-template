@@ -1,6 +1,9 @@
 unshift task runner template
 ===============================
 
+![unshift task runner](https://github.com/takumi0125/utr-template/blob/master/src/assets/img/ogp.png)
+
+
 # 概要
 
 ソースディレクトリに配置したソースファイルや画像などを、ディレクトリ構成を保ちつつ、<br>
@@ -178,7 +181,7 @@ package.jsonのscriptsに定義してあるタスクは上記3つですが、実
 
 ## start
 
-前述では build + watchとしていますが、webpackではwatchを実行するとビルドが走る仕様のため、以下のようなタスク構成となっています。
+前述では build + watchとしていますが、webpackではwatchを実行するとビルドが走る仕様のため、以下のようなタスク構成となっています。
 
 * cleanタスク実行後、html, pug, sass並列実行します。その後、watchタスクを実行します。
 * clean後にjsタスクを実行しないのは、webpack.watch実行時にビルドが実行されるためです。
