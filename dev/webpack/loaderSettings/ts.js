@@ -11,6 +11,8 @@ module.exports = (env)=> {
         // allowJs: true,
         // strict: true,
         // checkJs: true,
+        target: 'es5',
+        module: 'es2015',
         sourceMap: env == 'development'
       }
     }
