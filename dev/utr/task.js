@@ -2,7 +2,7 @@
 //  unshift task runner task file
 // ===============================================
 const config = require('../config.js');
-const utr = require('utr');
+const utr = require('./utr');
 
 const path = require('path');
 const fs = require('fs-extra');
@@ -54,11 +54,16 @@ const srcDir = path.resolve(config.srcDir);
 let webpackWatchings = {};
 
 const tasks = {
+  // コピー対象ファイルをpublishDirに展開するタスク
+  initProj: async (options = {}, logTaskNames = [ 'initProj' ])=> {
+    await tasks.copy({ src: getGlobPatternsByName('initProj') }, [ 'initProj' ]);
+  },
+
   // publishDirのファイルを削除するタスク
   clean: async (options = {}, logTaskNames = [ 'clean' ])=> {
     const promises = [];
     const cleanedFilePaths = [];
-    
+
     getFilePaths({
       src: options.src || config.globPatterns.clean,
       srcBase: publishDir,
@@ -74,7 +79,7 @@ const tasks = {
         .catch((e)=> utr.error(logTaskNames, e))
       );
     });
-  
+
     await Promise.all(promises);
     return cleanedFilePaths;
   },
@@ -147,7 +152,7 @@ const tasks = {
     await Promise.all(promises);
     return distFilePaths;
   },
-  
+
   // pugをコンパイルしてpublishDirに展開するタスク
   pug: async(options = {})=> {
     const promises = [];
@@ -166,7 +171,7 @@ const tasks = {
           }
         );
         return fs.outputFile(dist, pugCompile(metaData))
-        .then(()=> { 
+        .then(()=> {
           distFilePaths.push(dist);
           utr.log('pug', 'build', dist);
         })
@@ -187,7 +192,7 @@ const tasks = {
     getFilePaths({ src: options.src || getGlobPatternsByName('sass') })
     .map((filePath)=> {
       const dist = filePath.replace(srcDir, publishDir).replace(/\.(sass|scss)$/, '.css');
-      
+
       const sassOptions = {
         file: filePath,
         outputStyle: 'expanded'
@@ -246,7 +251,7 @@ const tasks = {
             .catch((e)=> utr.error('sass', e))
           )
         }
-        
+
         return Promise.all(fsPromises);
       })());
     });
@@ -254,7 +259,7 @@ const tasks = {
     await Promise.all(promises);
     return distFilePaths;
   },
-  
+
   // jsをwebpackでコンパイルしてpublishDirに展開するタスク
   js: async(options = {})=> {
     return Promise.all([
@@ -282,7 +287,7 @@ const tasks = {
       'html',
       getGlobPatternsByName('html'),
       async (taskName, eventName, filePath, renamedfilePath)=> {
-        const distFilePaths = await tasks.html({ src: getRelativeFilePath(filePath, srcDir) }); 
+        const distFilePaths = await tasks.html({ src: getRelativeFilePath(filePath, srcDir) });
 
         // リロード
         utr.reloadServer(distFilePaths);
@@ -320,7 +325,7 @@ const tasks = {
         utr.error('pug', 'Don\'t delete meta.json!!' )
       }
     );
-    
+
     // watch sass
     let sassGraphResult;
     makeWatchTask(
@@ -345,41 +350,24 @@ const tasks = {
       }
     );
 
-    // watch js not in webpack entries 
+    // watch js not in webpack entries
     // added or deleted or renamed
     makeWatchTask(
       'js',
       getGlobPatternsByName('js', true),
       (taskName, eventName, filePath, renamedfilePath)=> {
-        const key = getWebapckEntryKey(filePath, srcDir, config.excrusionPrefix);
-        // watchタスクに追加されていなければ追加
-        const w = webpackWatchings[key];
-        if(!w || w.closed) {
-          const { watchings } = makeWebpackWatchTask([ filePath ], [ filePath ]);
-          if(watchings) webpackWatchings = Object.assign(webpackWatchings, watchings);
-        }
+        // TODO: onCompile
       },
       (taskName, eventName, filePath, renamedfilePath)=> {
-        const key = getWebapckEntryKey(filePath, srcDir, config.excrusionPrefix);
-        if(eventName == 'deleted') {
-          // 削除時
-          const watching = webpackWatchings[key];
-          if(watching) {
-            watching.close(()=> {
-              watchOnDeleteDefault(taskName, eventName, filePath, renamedfilePath);
-              delete webpackWatchings[key];
-            });
-          }
-        }
+        // TODO: onDelete
       }
     );
 
-    const { promise, watchings } = makeWebpackWatchTask();
-    webpackWatchings = Object.assign(webpackWatchings, watchings);
+    const { promise, webpackCompiler } = makeWebpackWatchTask();
     await promise;
 
     // server by browser-sync
-    utr.initServer(config.browserSyncOptions);
+    utr.initServer(config.localServerOptions, config.hmr, webpackCompiler);
   },
 
   // build → watch

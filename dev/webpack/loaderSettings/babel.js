@@ -19,7 +19,9 @@ module.exports = (env)=> {
         '@babel/preset-react'
       ],
       plugins: [
-        [ 'transform-react-pug' ]
+        // [ '@babel/plugin-transform-runtime', { corejs: 3 } ],
+        '@babel/plugin-syntax-dynamic-import',
+        'transform-react-pug'
       ]
     }
   }

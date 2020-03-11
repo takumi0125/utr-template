@@ -7,7 +7,7 @@
 .test {
   width: 100px;
   height: 100px;
-  background-color: #00ffff;
+  background-color: #ffff00;
 }
 </style>
 

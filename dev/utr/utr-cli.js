@@ -5,7 +5,9 @@ const path = require('path');
 const program = require('commander');
 const chalk = require('chalk');
 
-const utr = require('utr');
+const utr = require('./utr');
+
+const defaultTask = require('./task');
 
 program
 .name("utr")
@@ -17,9 +19,9 @@ program
 program
 .arguments('<taskName>')
 .action(async (taskName)=> {
-  const tasks = require(path.resolve(program.taskfile));
+  const tasks = program.taskfile? require(path.resolve(program.taskfile)): defaultTask;
   utr.setEnv(program.env || 'development');
-  utr.setTasks(tasks)
+  utr.setTasks(tasks);
 
   if(!tasks[taskName]) {
     utr.error([ 'task error' ], `task:${taskName} doesn't exist.`);

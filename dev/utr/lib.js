@@ -2,7 +2,7 @@
 //  unshift task runner lib file
 // ===============================================
 const config = require('../config.js');
-const utr = require('utr');
+const utr = require('./utr');
 
 const path = require('path');
 const globule = require('globule');
@@ -24,9 +24,9 @@ const IGNORE_PATTERNS = [
 const publishDir = path.resolve(config.publishDir);
 const srcDir = path.resolve(config.srcDir);
 
-// 
+//
 // lib functions
-// 
+//
 
 // getFilePaths
 // globuleで該当するファイルパス一覧を取得
@@ -39,7 +39,7 @@ const getFilePaths = (options, matchPatterns = null)=> {
     prefixBase: true,
     nodir: true
   }, options));
-  
+
   return matchPatterns? globule.match(matchPatterns, filePaths): filePaths;
 }
 
@@ -66,7 +66,7 @@ const getGlobPatternsByName = (name, withIncludeFiles = false)=> {
 // filePath, srcDirからwebpackのentryのkeyを返す
 const getWebapckEntryKey = (filePath, srcDir, excrusionPrefix = '_')=> {
   const relativeFilePath = getRelativeFilePath(filePath, srcDir);
-  
+
   if(path.basename(path.dirname(relativeFilePath)).indexOf(excrusionPrefix) == 0) {
     // dirnameの先頭にアンスコがついていたらtype1
     return getWebpackEntrykeyType1(relativeFilePath);
@@ -119,7 +119,7 @@ const getWebpackEntryFilePaths = (type = 0, matchPatterns = null)=> {
       entries[key] = filePath;
       hasEntry = true;
     });
-    
+
   }
 
   return hasEntry? entries: null;
@@ -177,7 +177,7 @@ const getSassGraphFiles = (sassGraphResult, filePath)=> {
     if(result) filePaths = [ ...filePaths, ...result ];
     filePaths.push(getRelativeFilePath(path, srcDir));
   });
-  
+
   return filePaths;
 }
 
@@ -195,7 +195,7 @@ const getPugInheritanceFiles = (filePath, baseDir)=> {
 const webpackCallback = (error, stats, logTaskNames = [ 'js' ], reload = false)=> {
   if(error) {
     utr.error(logTaskNames, error.stack || error);
-    
+
     if (error.details) {
       utr.error(logTaskNames, error.details);
     }
@@ -217,16 +217,17 @@ const webpackCallback = (error, stats, logTaskNames = [ 'js' ], reload = false)=
 
   let filePaths = [];
   let filePath = '';
-  for(let key in info.entrypoints) {
-    const assets = info.entrypoints[key].assets;
-    for (let i = 0, l = assets.length; i < l; i++) {
-      filePath = path.join(publishDir, assets[i]);
+
+  for(let i = 0, l = info.chunks.length; i < l; i++) {
+    const files = info.chunks[i].files;
+    for (let j = 0, l2 = files.length; j < l2; j++) {
+      filePath = path.join(publishDir, files[j]);
       filePaths.push(filePath);
       utr.log(logTaskNames, 'build', `${filePath}`);
     }
   }
 
-  if(reload) utr.reloadServer(filePaths);
+  if(reload && !config.hmr) utr.reloadServer(filePaths);
 }
 
 // makeWebpackBuildTask
@@ -235,7 +236,7 @@ const webpackCallback = (error, stats, logTaskNames = [ 'js' ], reload = false)=
 const makeWebpackBuildTask = async (type)=> {
   const env = utr.getEnv();
   const entries = getWebpackEntryFilePaths(type);
-  
+
   return new Promise((resolve, reject)=> {
     if(!entries) {
       resolve();
@@ -253,34 +254,39 @@ const makeWebpackBuildTask = async (type)=> {
 
 // makeWebpackWatchTask
 // webpack.watchタスクを生成
-// matchPatterns0, matchPatterns1についてはetWebpackAllTypesEntryFilePathsを参照
+// matchPatterns0, matchPatterns1についてはgetWebpackAllTypesEntryFilePathsを参照
 const makeWebpackWatchTask = (matchPatterns0 = null, matchPatterns1 = null)=> {
-  const promises = [];
   const env = utr.getEnv();
 
-  const watchings = {};
-  
-  const entries = getWebpackAllTypesEntryFilePaths(matchPatterns0, matchPatterns1);
+  let entries = getWebpackAllTypesEntryFilePaths(matchPatterns0, matchPatterns1);
   if(!entries) return { promises: null, watching: null };
 
-  Object.keys(entries).map((key)=> {
-    const entry = {};
-    entry[key] = entries[key];
-    const webpackCompiler = webpack(webpackConfig(env, entry));
-    
-    promises.push(new Promise((resolve)=> {
-      const watching = webpackCompiler.watch(
+  if(config.hmr) {
+    Object.keys(entries).map((key)=> {
+      entries[key] = [
+        'webpack/hot/dev-server',
+        'webpack-hot-middleware/client',
+        entries[key]
+      ];
+    });
+  }
+
+  const webpackCompiler = webpack(webpackConfig(env, entries));
+
+  const promise = new Promise((resolve)=> {
+      if(config.hmr) return resolve();
+
+      webpackCompiler.watch(
         { ignored: [ /node_modules/ ] },
         (error, stats)=> {
           webpackCallback(error, stats, [ 'watch', 'js' ], true);
           resolve();
         }
       );
-      watchings[key] = watching;
-    }));
   })
 
-  return { promise: Promise.all(promises), watchings };
+
+  return { promise, webpackCompiler };
 }
 
 // makeWatchTask
@@ -290,9 +296,9 @@ const makeWebpackWatchTask = (matchPatterns0 = null, matchPatterns1 = null)=> {
 // onCompileは added, changed, renamed時のコールバック
 // onDeleteは deleted, renamed時のコールバック
 // onAllPreProcessはすべてのイベントの前に実行される処理
-// 
+//
 // コールバックの引数
-// 
+//
 const makeWatchTask = (
   taskName,
   src,
@@ -309,10 +315,10 @@ const makeWatchTask = (
 
         // 何らかの更新があったときに引数で与えられた処理を実行
         onAllPreProcess(taskName, eventName, filePath, renamedfilePath);
-        
+
         // 追加、内容変更、リネーム時は引数で与えられた処理を実行
         if(eventName.match(/(added|changed|renamed)/)) onCompile(taskName, eventName, filePath, renamedfilePath);
-        
+
         // 削除またはリネーム時はpublicDirの対象ファイルを削除
         if(eventName.match(/(deleted|renamed)/)) onDelete(taskName, eventName, filePath, renamedfilePath);
 

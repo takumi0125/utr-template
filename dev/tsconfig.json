@@ -1,19 +1,16 @@
-
 {
   "compilerOptions": {
     "sourceMap": true,
     "target": "es5",
-    "module": "es2015",
+    "module": "esnext",
     "jsx": "react",
+    "noImplicitAny": false,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "lib": [
-      "es2019",
-      "dom"
-    ]
-  },
-  "exclude": [
-    "node_modules"
-  ]
+    "strict": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "isolatedModules": false
+  }
 }

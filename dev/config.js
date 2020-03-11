@@ -16,8 +16,11 @@ const SRC_DIR = PROJECT_DIR + 'src';
 // 出力ディレクトリ
 const PUBLISH_DIR = PROJECT_DIR + 'htdocs';
 
+// コンテンツディレクトリ (ドキュメントルート直下の場合は空)
+const CONTENTS_DIR = '';
+
 // assetsディレクトリ名
-const ASSETS_DIR_NAME = 'assets';
+const ASSETS_DIR_NAME = 'assets';  // globパターンとしても使用するので path.resolveはしない
 
 // 画像ディレクトリ名 (glob)
 const IMG_DIR_NAME = '{img,image,images}';
@@ -35,12 +38,16 @@ const CSS_TRANSPILE_EXTS = [ 'css', 'sass', 'scss' ];
 const JS_TRANSPILE_EXTS = [ 'jsx', 'tsx', 'js', 'ts', 'vue' ];
 
 // ターゲットブラウザ
-TARGET_BROWSERS = [ 'last 2 versions', 'ie >= 11', 'Android >= 4.4', 'iOS >= 12' ];
+const TARGET_BROWSERS = [ 'last 2 versions', 'ie >= 11', 'Android >= 4.4', 'iOS >= 12' ];
 
+const contentsDriPrefix = CONTENTS_DIR? `${CONTENTS_DIR}/`: '';
 
 const config = {
   // プロジェクト名
   projectName: PROJECT_NAME,
+
+  // プロジェクトディレクトリ
+  projectDir: PROJECT_DIR,
 
   // ソースディレクトリ
   srcDir: SRC_DIR,
@@ -66,8 +73,8 @@ const config = {
     grid: true
   },
 
-  // assetsディレクトリ名
-  assetsDirName: ASSETS_DIR_NAME,
+  // assetsディレクトリパス
+  assetsDirPath: path.resolve(SRC_DIR, ASSETS_DIR_NAME),
 
   // 画像ディレクトリの名前
   imgDirName: IMG_DIR_NAME,
@@ -89,8 +96,10 @@ const config = {
 
   // 各タスクで使用するglobパターン
   globPatterns: {
+    initProj: [
+    ],
     clean: [
-      '**/**'
+      '**/**',
     ],
     copy: [
       '**/**',
@@ -98,26 +107,38 @@ const config = {
       '**/.htpasswd',
       `!**/${EXCRUSION_PREFIX}*/**`,
       `!**/${EXCRUSION_PREFIX}*`,
-      '!**/*.{html,htm,xhtml,pug,css,scss,sass,js,ts,vue,jsx,tsx}'
+      `!**/*.{html,htm,xhtml,pug,css,scss,sass,js,ts,vue,jsx,tsx}`
     ],
-    html: [ '**/*.{html,htm,xhtml}' ],
-    pug: [ '**/*.pug' ],
-    sass: [ '**/*.{css,scss,sass}' ],
-    js: [ `**/*.{${JS_TRANSPILE_EXTS.join(',')}}` ],
-    js2: [ `**/${EXCRUSION_PREFIX}*/{entry,init}.{${JS_TRANSPILE_EXTS.join(',')}}` ]
+    html: [ `${contentsDriPrefix}**/*.{html,htm,xhtml}` ],
+    pug: [ `${contentsDriPrefix}**/*.pug` ],
+    sass: [ `${contentsDriPrefix}**/*.{css,scss,sass}` ],
+    js: [ `${contentsDriPrefix}**/*.{${JS_TRANSPILE_EXTS.join(',')}}` ],
+    js2: [ `${contentsDriPrefix}**/${EXCRUSION_PREFIX}*/{entry,init}.{${JS_TRANSPILE_EXTS.join(',')}}` ]
   },
 
   // ローカルサーバー (BrowserSync)のオプション
-  browserSyncOptions: {
+  localServerOptions: {
+    // proxy: 'localhost:8888',
     server: path.resolve(PUBLISH_DIR),
     open: 'external',
     host: "0.0.0.0",
     port: 50000,
-    startPath:  '',
+    ui: { port: 50001 },
+    startPath:  `${contentsDriPrefix}`,
     browser: 'google chrome',
     https: false,
-    // proxy: "localhost:8888",  //MAMPでphpを使用する場合など
+    logLevel: "silent",
     // httpModule: 'http2',  //使用するにはnpm i -S http2
+  },
+
+  hmr: false,  //HMR
+
+  splitChunksVendor: {
+    name: `${ASSETS_DIR_NAME}/js/vendor`,
+    libs: [
+      'gsap',
+      `${ASSETS_DIR_NAME}/js/_modules`
+    ]
   }
 };
 

@@ -22,30 +22,34 @@ const publishDir = path.resolve(config.publishDir);
 module.exports = (env, entry)=> {
   const webpackConfig = {
     entry,
-  
+
     context: srcDir,
-    
+
     output: {
       path: publishDir,
-      filename: '[name]'
+      filename: '[name]',
+      chunkFilename: '[name].js'
     },
-  
+
     mode: env || 'development',
-  
+
     devtool: env == 'development'? 'source-map': 'none',
-  
-    resolve: {
-      extensions: [ '.js', '.jsx', '.vue', '.ts', '.glsl', '.vert', '.frag' ]
+
+    devServer: {
+      hot: true
     },
-  
+
+    resolve: {
+      extensions: [ '.js', '.jsx', '.vue', '.ts', '.glsl', '.vert', '.frag' ],
+    },
+
     module: {
       rules: [
         // js/jsx
         {
           test: /\.(js|jsx)$/,
-          exclude: /node_modules/,
+          exclude: /node_modules\/(?!(three|gsap|vuex)\/).*/,
           use: [
-            'cache-loader',
             babelLoaderSettings(env)
           ]
         },
@@ -53,9 +57,9 @@ module.exports = (env, entry)=> {
         // ts/tsx
         {
           test: /\.(ts|tsx)$/,
-          exclude: /node_modules/,
+          // exclude: /node_modules\/(?!(three|gsap|vuex)\/).*/,
           use: [
-            'cache-loader',
+            // babelLoaderSettings(env),
             tsLoaderSettings(env)
           ]
         },
@@ -63,12 +67,12 @@ module.exports = (env, entry)=> {
         // vue
         {
           test: /\.vue$/,
-          use: [ 'cache-loader', 'vue-loader' ]
+          use: [ 'vue-loader' ]
         },
-  
-        //  raw
-        { test: /\.(html|json)$/, use: [ 'raw-loader' ] },
-  
+
+        //  json
+        { test: /\.json$/, use: [ 'json-loader' ], type: "javascript/auto" },
+
         //  glsl
         { test: /\.(glsl|vert|frag)$/, use: [ 'raw-loader', 'glslify-loader' ] },
 
@@ -111,12 +115,12 @@ module.exports = (env, entry)=> {
         }
       ]
     },
-  
+
     plugins: [
       new WriteFilePlugin(),
 
       new VueLoaderPlugin(),
-  
+
       // define
       new webpack.DefinePlugin({
         ENV: JSON.stringify({
@@ -124,11 +128,36 @@ module.exports = (env, entry)=> {
           projectName: config.projectName
         })
       })
-    ]
+    ],
+
+    optimization: {}
   };
+
+  if(env !== 'production' && config.hmr) {
+    webpackConfig.plugins.push(new webpack.HotModuleReplacementPlugin());
+  }
+
+  if(config.splitChunksVendor) {
+    webpackConfig.optimization.splitChunks = {
+      cacheGroups: {
+        vendors: {
+          test: (module, chunks)=> {
+            const regExp = new RegExp(config.splitChunksVendor.libs.join('|'));
+            return module.resource && module.resource.match(regExp);
+          },
+          name: config.splitChunksVendor.name,
+          chunks: 'all',
+          enforce: true
+        },
+        default: false,
+        defaultVecdors: false
+      }
+    }
+  }
 
   if(env == 'production' && config.minify.js) {
     webpackConfig.optimization = {
+      ...webpackConfig.optimization,
       minimize: true,
       minimizer: [
         new TerserPlugin({
