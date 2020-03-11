@@ -40,7 +40,7 @@ const JS_TRANSPILE_EXTS = [ 'jsx', 'tsx', 'js', 'ts', 'vue' ];
 // ターゲットブラウザ
 const TARGET_BROWSERS = [ 'last 2 versions', 'ie >= 11', 'Android >= 4.4', 'iOS >= 12' ];
 
-const contentsDriPrefix = CONTENTS_DIR? `${CONTENTS_DIR}/`: '';
+const contentsDirPrefix = CONTENTS_DIR? `${CONTENTS_DIR}/`: '';
 
 const config = {
   // プロジェクト名
@@ -54,6 +54,9 @@ const config = {
 
   // 納品ディレクトリ
   publishDir: PUBLISH_DIR,
+
+  // assetsディレクトリの名前
+  assetsDirName: ASSETS_DIR_NAME,
 
   // ローカルサーバのデフォルトパス (ドキュメントルートからの絶対パス)
   serverDefaultPath: '',
@@ -72,12 +75,6 @@ const config = {
     overrideBrowserslist: TARGET_BROWSERS,
     grid: true
   },
-
-  // assetsディレクトリパス
-  assetsDirPath: path.resolve(SRC_DIR, ASSETS_DIR_NAME),
-
-  // 画像ディレクトリの名前
-  imgDirName: IMG_DIR_NAME,
 
   // ファイル圧縮
   minify: {
@@ -109,11 +106,11 @@ const config = {
       `!**/${EXCRUSION_PREFIX}*`,
       `!**/*.{html,htm,xhtml,pug,css,scss,sass,js,ts,vue,jsx,tsx}`
     ],
-    html: [ `${contentsDriPrefix}**/*.{html,htm,xhtml}` ],
-    pug: [ `${contentsDriPrefix}**/*.pug` ],
-    sass: [ `${contentsDriPrefix}**/*.{css,scss,sass}` ],
-    js: [ `${contentsDriPrefix}**/*.{${JS_TRANSPILE_EXTS.join(',')}}` ],
-    js2: [ `${contentsDriPrefix}**/${EXCRUSION_PREFIX}*/{entry,init}.{${JS_TRANSPILE_EXTS.join(',')}}` ]
+    html: [ `${contentsDirPrefix}**/*.{html,htm,xhtml}` ],
+    pug: [ `${contentsDirPrefix}**/*.pug` ],
+    sass: [ `${contentsDirPrefix}**/*.{css,scss,sass}` ],
+    js: [ `${contentsDirPrefix}**/*.{${JS_TRANSPILE_EXTS.join(',')}}` ],
+    js2: [ `${contentsDirPrefix}**/${EXCRUSION_PREFIX}*/{entry,init}.{${JS_TRANSPILE_EXTS.join(',')}}` ]
   },
 
   // ローカルサーバー (BrowserSync)のオプション
@@ -124,7 +121,7 @@ const config = {
     host: "0.0.0.0",
     port: 50000,
     ui: { port: 50001 },
-    startPath:  `${contentsDriPrefix}`,
+    startPath:  `${contentsDirPrefix}`,
     browser: 'google chrome',
     https: false,
     logLevel: "silent",

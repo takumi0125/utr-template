@@ -28,7 +28,8 @@ module.exports = (env, entry)=> {
     output: {
       path: publishDir,
       filename: '[name]',
-      chunkFilename: '[name].js'
+      chunkFilename: '[name].js',
+      publicPath: '/'
     },
 
     mode: env || 'development',

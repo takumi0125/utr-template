@@ -43,7 +43,7 @@ module.exports = (()=> {
     const host = options.host || 'localhost';
     const port = options.port || '3000';
     const uiPort = (options.ui && options.ui.port) || '3001';
-    const dir = options.startPath? `/${startPath}`: '';
+    const dir = options.startPath? `/${options.startPath}`: '';
 
     const local = `${protcol}${host}:${port}${dir}`;
     const ui = `${protcol}${host}:${uiPort}`;
@@ -85,7 +85,7 @@ module.exports = (()=> {
     getTasks: ()=> tasks,
 
     initServer: (options, hmr, webpackCompiler, callback = ()=> {})=> {
-      if(hmr) {
+      if(env !== 'production' && hmr) {
         const webpackDevMiddlewareInstance = new webpackDevMiddleware(webpackCompiler);
         webpackDevMiddlewareInstance.waitUntilValid(()=> {
           callback();
