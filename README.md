@@ -103,13 +103,24 @@ yarn watch
 yarn watch:prd
 ```
 
+### initProj
+`config.globPatterns.initProj` にマッチするファイルを公開ディレクトリにコピーします。<br>
+プロジェクトで編集する必要のないディレクトリ群などに使用できます。使用頻度はおそらく低め。
+
+```
+yarn initProj
+```
+
+### clean
+公開ディレクトリ内の `config.globPatterns.clean` にマッチするファイル・ディレクトリを削除します。
+
+```
+yarn clean
+```
+
 # タスク詳細
 
-package.jsonのscriptsに定義してあるタスクは上記3つですが、実際は以下のタスクが定義されています。
-
-## clean
-
-公開ディレクトリ内の `config.globPatterns.clean` にマッチするファイル・ディレクトリを削除します。
+package.jsonのscriptsに定義してあるタスクは上記のみですが、実際は以下のタスクが定義されています。
 
 ## copy
 
