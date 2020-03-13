@@ -7,7 +7,7 @@ module.exports = (env)=> {
     options: {
       appendTsSuffixTo: [/\.vue$/],
       context: path.resolve(config.srcDir),
-      configFile: path.resolve(config.projectDir, 'tsconfig.json'),
+      configFile: path.join(config.projectDir, 'tsconfig.json'),
       compilerOptions: {
         sourceMap: env == 'development'
       }

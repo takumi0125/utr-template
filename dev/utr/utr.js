@@ -85,6 +85,15 @@ module.exports = (()=> {
     getTasks: ()=> tasks,
 
     initServer: (options, hmr, webpackCompiler, callback = ()=> {})=> {
+      options = Object.assign({
+        open: 'external',
+        host: "0.0.0.0",
+        port: 50000,
+        ui: { port: 50001 },
+        browser: 'google chrome',
+        logLevel: "silent"
+      }, options);
+
       if(env !== 'production' && hmr) {
         const webpackDevMiddlewareInstance = new webpackDevMiddleware(webpackCompiler);
         webpackDevMiddlewareInstance.waitUntilValid(()=> {

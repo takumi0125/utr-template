@@ -60,7 +60,6 @@ module.exports = (env, entry)=> {
           test: /\.(ts|tsx)$/,
           // exclude: /node_modules\/(?!(three|gsap|vuex)\/).*/,
           use: [
-            // babelLoaderSettings(env),
             tsLoaderSettings(env)
           ]
         },
@@ -138,20 +137,21 @@ module.exports = (env, entry)=> {
     webpackConfig.plugins.push(new webpack.HotModuleReplacementPlugin());
   }
 
-  if(config.splitChunksVendor) {
+  if(config.splitChunksCommon) {
     webpackConfig.optimization.splitChunks = {
       cacheGroups: {
         vendors: {
           test: (module, chunks)=> {
-            const regExp = new RegExp(config.splitChunksVendor.libs.join('|'));
+            const regExp = new RegExp(config.splitChunksCommon.includes.join('|'));
             return module.resource && module.resource.match(regExp);
           },
-          name: config.splitChunksVendor.name,
+          name: config.splitChunksCommon.name,
           chunks: 'all',
-          enforce: true
+          enforce: true,
+          minChunks: 2
         },
         default: false,
-        defaultVecdors: false
+        defaultVendors: false
       }
     }
   }

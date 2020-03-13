@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "initProj": "node ./dev/utr/utr-cli.js initProj",
+    "clean": "node ./dev/utr/utr-cli.js clean",
     "start": "node ./dev/utr/utr-cli.js start --env development",
     "build": "node ./dev/utr/utr-cli.js build --env development",
     "build:prd": "node ./dev/utr/utr-cli.js build --env production",

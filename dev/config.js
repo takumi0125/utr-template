@@ -5,7 +5,7 @@
 const path = require('path');
 
 // プロジェクト名
-const PROJECT_NAME = 'sample';
+const PROJECT_NAME = 'utr';
 
 // プロジェクトディレクトリ
 const PROJECT_DIR = __dirname + '/../';  // globパターンとしても使用するので path.resolveはしない
@@ -55,7 +55,7 @@ const config = {
   // 納品ディレクトリ
   publishDir: PUBLISH_DIR,
 
-  // assetsディレクトリの名前
+  // assetsディレクトリ
   assetsDirName: ASSETS_DIR_NAME,
 
   // ローカルサーバのデフォルトパス (ドキュメントルートからの絶対パス)
@@ -96,7 +96,7 @@ const config = {
     initProj: [
     ],
     clean: [
-      '**/**',
+      '**/**'
     ],
     copy: [
       '**/**',
@@ -115,25 +115,19 @@ const config = {
 
   // ローカルサーバー (BrowserSync)のオプション
   localServerOptions: {
-    // proxy: 'localhost:8888',
     server: path.resolve(PUBLISH_DIR),
-    open: 'external',
-    host: "0.0.0.0",
-    port: 50000,
-    ui: { port: 50001 },
     startPath:  `${contentsDirPrefix}`,
-    browser: 'google chrome',
-    https: false,
-    logLevel: "silent",
+    // proxy: 'localhost:8888',
+    // https: true,
     // httpModule: 'http2',  //使用するにはnpm i -S http2
   },
 
   hmr: false,  //HMR
 
-  splitChunksVendor: {
-    name: `${ASSETS_DIR_NAME}/js/vendor`,
-    libs: [
-      'gsap',
+  splitChunksCommon: {
+    name: `${ASSETS_DIR_NAME}/js/common`,
+    includes: [
+      '/node_modules/',
       `${ASSETS_DIR_NAME}/js/_modules`
     ]
   }

@@ -40,41 +40,45 @@ yarn start
 .
 ├── dev/ # 開発環境関連のファイルを格納するディレクトリ
 │    │
-│    ├── local_modules/ # ローカルnpmパッケージ格納ディレクトリ
+│    ├── utr/             # utr設定関連のファイルを格納するディレクトリ
 │    │    │
-│    │    ├── utr/      # タスクランナー本体 (npmパッケージ)
+│    │    ├── lib.js     # task.jsで使用している各種処理
 │    │    │
-│    │    └── utr-cli/  # utrをラップしたCLI (npmパッケージ)
-│    │
-│    ├── utr/           # utr設定関連のファイルを格納するディレクトリ
+│    │    ├── task.js    # タスク設定ファイル
 │    │    │
-│    │    ├── lib.js    # task.jsで使用している各種処理
+│    │    ├── utr-cli.js # utrをラップしたCLI
 │    │    │
-│    │    └── task.js   # タスク設定ファイル
+│    │    └── utr.js     # タスクランナー本体
 │    │
-│    ├── webpack/       # webpack周りの設定ファイル等
+│    ├── webpack/         # webpack周りの設定ファイル等
 │    │
-│    ├── config.js      # 各種設定が書かれた設定ファイル
+│    ├── config.js        # 各種設定が書かれた設定ファイル
 │    │
-│    ├── meta.js        # pugコンパイル時に読み込んで変数として展開するデータ
-│    │
-│    └── tsconfig.json  # TypeScript設定ファイル
+│    └── meta.js          # pugコンパイル時に読み込んで変数として展開するデータ
 │
-├── htdocs/ # 公開ディレクトリ
 │
-├── src/    # ソースファイル格納ディレクトリ
+├── htdocs/        # 公開ディレクトリ
 │
-└── package.json
+├── src/           # ソースファイル格納ディレクトリ
+│
+├── package.json   # package.json
+│
+└── tsconfig.json  # TypeScript設定ファイル
 ```
+
 
 ## コマンド
 
 基本的にはYarnを使用してください。npmでも実行はできますが、エラーが出る場合があります (後述)。
 
-### start
+### start (またはdev)
 開発時は主にこれを使用 (build + watch)
 ```
 yarn start
+```
+または
+```
+yarn dev
 ```
 
 ### build
@@ -145,7 +149,7 @@ package.jsonのscriptsに定義してあるタスクは上記3つですが、実
 * TypeScriptの設定ファイルは `dev/tsconfig.json` です。
 * webpackの詳しい設定は `dev/webpack/config.js` に記述されています。
 
-## webpackのentry
+### webpackのentry
 
 前述のとおり、 基本的にはタスク除外の接頭辞 (`config.excrusionPrefix`) がついていないものがコンパイル対象です。
 
@@ -159,6 +163,27 @@ package.jsonのscriptsに定義してあるタスクは上記3つですが、実
 ↓<br>
 `htdocs/assets/js/index.js` <br>
 として出力されます。
+
+### splitChunks
+
+2回以上読み込まれているモジュールは webpack の splitChunks 機能を使用し、<br>
+共通ファイルとして出力されます。<br>
+設定は `dev/config.js` の splitChunksCommon に記述されています。
+
+デフォルトの設定は以下のようになっており<br>
+nameはパスを含めたファイル名、
+includesは切り出すモジュールのディレクトリ名の配列です。
+
+```
+{
+  name: `${ASSETS_DIR_NAME}/js/common`,
+  includes: [
+    '/node_modules/',
+    `${ASSETS_DIR_NAME}/js/_modules`
+  ]
+}
+```
+
 
 ## build
 
@@ -178,6 +203,17 @@ package.jsonのscriptsに定義してあるタスクは上記3つですが、実
 * pugは <a href="https://www.npmjs.com/package/pug-inheritance" target="_blank">pug-inheritance</a>、sassは <a href="https://www.npmjs.com/package/sass-graph" target="_blank">sass-graph</a> を利用して依存関係を取得します。
 * jsはwebpack.watchで監視 (変更があった場合に自動でコンパイルが走ります)。webpack.watchは依存関係を考慮し適切なファイルをコンパイルします。
 * BrowerSyncのoptionは `config.browserSyncOptions` に定義されています。
+
+### HMR
+
+完全ではないですが、HMRも対応しています。<br>
+`dev/config.js` の hmr を true に設定すると、<br>
+.vue の拡張子のファイルが更新されると、ホットリロードされます。<br>
+Reactで使用したい場合は、コード内で然るべき対応を取ります。 (module.hot)
+
+ただし、その他の .js や .ts ファイルが更新されてもリロードされないので、<br>
+逐次リロードしてください。
+
 
 ## start
 
