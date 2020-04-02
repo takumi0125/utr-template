@@ -163,14 +163,24 @@ const tasks = {
     .map((filePath)=> {
       const dist = filePath.replace(srcDir, publishDir).replace(/\.pug$/, '.html');
       promises.push((async ()=> {
-        const pugCompile = pug.compileFile(
-          filePath,
-          {
-            pretty: !getMinifyOption('html'),
-            basedir: srcDir
-          }
-        );
-        return fs.outputFile(dist, pugCompile(metaData))
+        let pugCompile;
+        try {
+          pugCompile = pug.compileFile(
+            filePath,
+            {
+              pretty: !getMinifyOption('html'),
+              basedir: srcDir
+            }
+          );
+        } catch(e) {
+          utr.log('pug', 'error', e.toString());
+        }
+        if(!pugCompile) return;
+
+        const pugResult = pugCompile(metaData);
+        if(!pugResult) return;
+
+        return fs.outputFile(dist, pugResult)
         .then(()=> {
           distFilePaths.push(dist);
           utr.log('pug', 'build', dist);
@@ -217,7 +227,21 @@ const tasks = {
       }
       promises.push((async ()=> {
         // sass process
-        const sassResult = sass.renderSync(sassOptions);
+        let sassResult;
+        await new Promise((resolve, reject)=> {
+          sass.render(sassOptions, (error, result)=> {
+            if(error) {
+              utr.log('sass', 'error', error.file + "\n" + error.formatted)
+              resolve(error);
+              return;
+            }
+            sassResult = result;
+            resolve();
+          });
+        });
+
+        if(!sassResult) return [];
+
         if(sassResult.map) {
           postcssProcessOptions.map = {
             inline: false,
