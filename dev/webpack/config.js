@@ -41,7 +41,7 @@ module.exports = (env, entry)=> {
     },
 
     resolve: {
-      extensions: [ '.js', '.jsx', '.vue', '.ts', '.glsl', '.vert', '.frag' ],
+      extensions: [ '.js', '.jsx', '.vue', '.ts', '.tsx', '.glsl', '.vert', '.frag' ],
     },
 
     module: {
