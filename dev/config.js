@@ -61,9 +61,6 @@ const config = {
   // ローカルサーバのデフォルトパス (ドキュメントルートからの絶対パス)
   serverDefaultPath: '',
 
-  // ローカルサーバをhttpsにするかどうか
-  https: false,
-
   // タスクから除外するためのプレフィックス
   excrusionPrefix: EXCRUSION_PREFIX,
 
