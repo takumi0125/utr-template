@@ -7,6 +7,9 @@ const browserSync = require('browser-sync').create();
 const webpackDevMiddleware = require('webpack-dev-middleware');
 const webpackHotMiddleware = require('webpack-hot-middleware');
 
+const url = require('url');
+const proxy = require('proxy-middleware');
+
 module.exports = (()=> {
   let env, tasks;
 
@@ -84,7 +87,7 @@ module.exports = (()=> {
 
     getTasks: ()=> tasks,
 
-    initServer: (options, hmr, webpackCompiler, callback = ()=> {})=> {
+    initServer: (options, webpackCompiler, hmr = false, apiMiddlewareProxySettings = null, callback = ()=> {})=> {
       options = Object.assign({
         open: 'external',
         host: "0.0.0.0",
@@ -94,6 +97,19 @@ module.exports = (()=> {
         logLevel: "silent"
       }, options);
 
+      const middleware = [];
+
+      if(apiMiddlewareProxySettings) {
+        const proxyOptions = url.parse(apiMiddlewareProxySettings.url);
+        proxyOptions.route = apiMiddlewareProxySettings.route;
+        proxyOptions.cookieRewrite = apiMiddlewareProxySettings.cookieRewrite;
+
+        const authJson = apiMiddlewareProxySettings.authJson;
+        if(authJson) proxyOptions.auth = `${authJson.username}:${authJson.password}`;
+
+        middleware.push(proxy(proxyOptions));
+      }
+
       if(env !== 'production' && hmr) {
         const webpackDevMiddlewareInstance = new webpackDevMiddleware(webpackCompiler);
         webpackDevMiddlewareInstance.waitUntilValid(()=> {
@@ -101,14 +117,24 @@ module.exports = (()=> {
           localServerInfo(options);
         })
 
-        options = Object.assign(options, {
-          middleware: [
-            new webpackHotMiddleware(webpackCompiler),
-            webpackDevMiddlewareInstance
-          ]
-        });
+        middleware.push(new webpackHotMiddleware(webpackCompiler));
+        middleware.push(webpackDevMiddlewareInstance);
+
+        if(apiMiddlewareProxySettings) {
+          const proxyOptions = url.parse(apiMiddlewareProxySettings.url);
+          proxyOptions.route = apiMiddlewareProxySettings.route;
+          proxyOptions.cookieRewrite = apiMiddlewareProxySettings.cookieRewrite;
+
+          const authJson = apiMiddlewareProxySettings.authJson;
+          if(authJson) proxyOptions.auth = `${authJson.username}:${authJson.password}`;
+
+          middleware.push(proxy(proxyOptions));
+        }
+
+        options.middleware = middleware;
         browserSync.init(options);
       } else {
+        options.middleware = middleware;
         browserSync.init(options, ()=> {
           callback();
           localServerInfo(options);

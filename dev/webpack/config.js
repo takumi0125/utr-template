@@ -125,7 +125,8 @@ module.exports = (env, entry)=> {
       new webpack.DefinePlugin({
         ENV: JSON.stringify({
           env,
-          projectName: config.projectName
+          projectName: config.projectName,
+          data: config.defineData[env]
         })
       })
     ],

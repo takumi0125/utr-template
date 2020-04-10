@@ -119,6 +119,14 @@ const config = {
     // httpModule: 'http2',  //使用するにはnpm i -S http2
   },
 
+  // 外部サーバのAPI設定
+  apiMiddlewareProxySettings: {
+    url: 'https://sega60th.s2factory.co.jp/api',
+    route: '/api',
+    cookieRewrite: true,
+    authJson: require(path.join(PROJECT_DIR, '.credentials/basic.json'))
+  },
+
   hmr: false,  //HMR
 
   splitChunksCommon: {
@@ -127,6 +135,11 @@ const config = {
       '/node_modules/',
       `${ASSETS_DIR_NAME}/js/_modules`
     ]
+  },
+
+  defineData: {
+    development: {},
+    production: {}
   }
 };
 

@@ -391,7 +391,7 @@ const tasks = {
     await promise;
 
     // server by browser-sync
-    utr.initServer(config.localServerOptions, config.hmr, webpackCompiler);
+    utr.initServer(config.localServerOptions, webpackCompiler, config.hmr, config.apiMiddlewareProxySettings);
   },
 
   // build → watch

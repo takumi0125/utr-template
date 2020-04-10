@@ -43,10 +43,10 @@ tmtags
 Session.vim
 
 node_modules
-credentials
 bower_components
 .sass-cache
 .cache-loader
+.credentials
 npm-debug.log
 
 #editor
