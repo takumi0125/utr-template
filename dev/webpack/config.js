@@ -2,8 +2,8 @@
 const path = require('path');
 const webpack = require('webpack');
 const WriteFilePlugin = require('write-file-webpack-plugin');
-
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+
 const TerserPlugin = require('terser-webpack-plugin');
 
 // loader settings
@@ -34,14 +34,15 @@ module.exports = (env, entry)=> {
 
     mode: env || 'development',
 
-    devtool: env == 'development'? 'source-map': 'none',
+    devtool: env === 'development'? 'source-map': 'none',
 
     devServer: {
-      hot: true
+      hot: env === 'development'
     },
 
     resolve: {
       extensions: [ '.js', '.jsx', '.vue', '.ts', '.tsx', '.glsl', '.vert', '.frag' ],
+      alias: {}
     },
 
     module: {
@@ -49,7 +50,7 @@ module.exports = (env, entry)=> {
         // js/jsx
         {
           test: /\.(js|jsx)$/,
-          exclude: /node_modules\/(?!(three|gsap|vuex)\/).*/,
+          exclude: new RegExp(`node_modules\/(?!(${config.jsNodeModuleExcludes.join('|')})\/).*`),
           use: [
             babelLoaderSettings(env)
           ]
@@ -58,8 +59,9 @@ module.exports = (env, entry)=> {
         // ts/tsx
         {
           test: /\.(ts|tsx)$/,
-          // exclude: /node_modules\/(?!(three|gsap|vuex)\/).*/,
+          exclude: new RegExp(`node_modules\/(?!(${config.jsNodeModuleExcludes.join('|')})\/).*`),
           use: [
+            babelLoaderSettings(env),
             tsLoaderSettings(env)
           ]
         },
@@ -136,20 +138,22 @@ module.exports = (env, entry)=> {
 
   if(env !== 'production' && config.hmr) {
     webpackConfig.plugins.push(new webpack.HotModuleReplacementPlugin());
+    webpackConfig.resolve.alias['react-dom'] = '@hot-loader/react-dom';
   }
 
   if(config.splitChunksCommon) {
     webpackConfig.optimization.splitChunks = {
       cacheGroups: {
-        vendors: {
+        common: {
           test: (module, chunks)=> {
-            const regExp = new RegExp(config.splitChunksCommon.includes.join('|'));
-            return module.resource && module.resource.match(regExp);
+            const regExpIncludes = new RegExp(config.splitChunksCommon.includes.join('|'));
+            const regExpExcludes = new RegExp(config.splitChunksCommon.excludes.join('|'));
+            return module.resource && module.resource.match(regExpIncludes) && !module.resource.match(regExpExcludes);
           },
           name: config.splitChunksCommon.name,
           chunks: 'all',
           enforce: true,
-          minChunks: 2
+          // minChunks: 2,
         },
         default: false,
         defaultVendors: false
@@ -157,13 +161,13 @@ module.exports = (env, entry)=> {
     }
   }
 
-  if(env == 'production' && config.minify.js) {
+  if(env === 'production' && config.minify.js) {
     webpackConfig.optimization = {
       ...webpackConfig.optimization,
       minimize: true,
       minimizer: [
         new TerserPlugin({
-          // parallel: true,
+          parallel: true,
           terserOptions: {
             compress: { drop_console: true }
           }

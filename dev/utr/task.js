@@ -157,6 +157,7 @@ const tasks = {
   pug: async(options = {})=> {
     const promises = [];
     const metaData = require(config.metaDataJson)(utr.getEnv());
+    metaData.data = config.defineData[utr.getEnv()];
     const distFilePaths = [];
 
     getFilePaths({ src: options.src || getGlobPatternsByName('pug') })

@@ -120,22 +120,32 @@ const config = {
   },
 
   // 外部サーバのAPI設定
-  apiMiddlewareProxySettings: {
-    url: 'https://sega60th.s2factory.co.jp/api',
-    route: '/api',
-    cookieRewrite: true,
-    authJson: require(path.join(PROJECT_DIR, '.credentials/basic.json'))
-  },
+  // apiMiddlewareProxySettings: {
+  //   url: 'https://example.com/api',
+  //   route: '/api',
+  //   cookieRewrite: true,
+  //   authJson: require(path.join(PROJECT_DIR, '.credentials/basic.json'))
+  // },
 
   hmr: false,  //HMR
 
   splitChunksCommon: {
-    name: `${ASSETS_DIR_NAME}/js/common`,
+    name: `${ASSETS_DIR_NAME}/js/lib`,
     includes: [
       '/node_modules/',
-      `${ASSETS_DIR_NAME}/js/_modules`
+      // `${ASSETS_DIR_NAME}/js/_modules`,
+    ],
+    excludes: [
+      'three',
     ]
   },
+
+  jsNodeModuleExcludes: [
+    'three',
+    'gsap',
+    'vuex',
+    'swiper'
+  ],
 
   defineData: {
     development: {},

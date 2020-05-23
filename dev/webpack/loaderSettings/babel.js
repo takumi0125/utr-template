@@ -1,6 +1,13 @@
 const config = require('../../config.js');
 
 module.exports = (env)=> {
+  const plugins = [
+    '@babel/plugin-syntax-dynamic-import',
+    'transform-react-pug'
+  ];
+
+  // if(env === 'development') plugins.unshift('react-hot-loader/babel');
+
   return {
     loader: 'babel-loader',
     options: {
@@ -18,11 +25,7 @@ module.exports = (env)=> {
         ],
         '@babel/preset-react'
       ],
-      plugins: [
-        // [ '@babel/plugin-transform-runtime', { corejs: 3 } ],
-        '@babel/plugin-syntax-dynamic-import',
-        'transform-react-pug'
-      ]
+      plugins
     }
   }
 }
