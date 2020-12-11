@@ -52,11 +52,6 @@ module.exports = (()=> {
     const ui = `${protcol}${host}:${uiPort}`;
 
     log('server', 'start', 'start server powered by browser-sync');
-    log('server', 'info', '-----------------------------------');
-    log('server', 'info', `  Local: ${chalk.bold.cyan(local)}`);
-    log('server', 'info', `     UI: ${chalk.bold.cyan(ui)}`);
-    log('server', 'info', '-----------------------------------');
-    log('server', 'info', `Serving files from: ${options.server}`);
   };
 
   return {
@@ -89,12 +84,10 @@ module.exports = (()=> {
 
     initServer: (options, webpackCompiler, hmr = false, apiMiddlewareProxySettings = null, callback = ()=> {})=> {
       options = Object.assign({
-        open: 'external',
-        host: "0.0.0.0",
+        online: true,
+        open: 'local',
         port: 50000,
         ui: { port: 50001 },
-        browser: 'google chrome',
-        logLevel: "silent"
       }, options);
 
       const middleware = [];

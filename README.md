@@ -94,7 +94,7 @@ yarn build:prd
 
 ### watch
 ファイルの変更を監視し、変更があった場合に必要なタスクを実行します。<br>
-また、BrowserSyncによるローカルサーバが立ち上がります。 (http://0.0.0.0:50000/)
+また、BrowserSyncによるローカルサーバが立ち上がります。 (http://localhost:50000/)
 ```
 yarn watch
 ```
@@ -207,7 +207,7 @@ includesは切り出すモジュールのディレクトリ名の配列です。
 ## watch
 
 前述の通り、ファイルの変更を監視し、変更があった場合に必要なタスクを実行します。<br>
-また、BrowserSyncによるローカルサーバが立ち上がります。 (http://0.0.0.0:50000/)
+また、BrowserSyncによるローカルサーバが立ち上がります。 (http://localhost:50000/)
 
 * copy, html, pug, sassタスクの対象ファイルを <a href="https://www.npmjs.com/package/gaze" target="_blank">gaze</a> で監視し、変更があったファイルのみにタスクを実行します。
 * pug, sassは、タスク除外の接頭辞 (`config.excrusionPrefix`)がついたディレクトリ、ファイルも監視し依存関係を取得して適切なファイルにタスクを実行します。
