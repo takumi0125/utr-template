@@ -50,7 +50,7 @@ module.exports = (env, entry)=> {
         // js/jsx
         {
           test: /\.(js|jsx)$/,
-          exclude: new RegExp(`node_modules\/(?!(${config.jsNodeModuleExcludes.join('|')})\/).*`),
+          exclude: new RegExp(`node_modules\\${path.sep}(?!(${config.jsNodeModuleExcludes.join('|')})\\${path.sep}).*`),
           use: [
             babelLoaderSettings(env)
           ]
@@ -59,7 +59,7 @@ module.exports = (env, entry)=> {
         // ts/tsx
         {
           test: /\.(ts|tsx)$/,
-          exclude: new RegExp(`node_modules\/(?!(${config.jsNodeModuleExcludes.join('|')})\/).*`),
+          exclude: new RegExp(`node_modules\\${path.sep}(?!(${config.jsNodeModuleExcludes.join('|')})\\${path.sep}).*`),
           use: [
             babelLoaderSettings(env),
             tsLoaderSettings(env)
@@ -146,11 +146,16 @@ module.exports = (env, entry)=> {
       cacheGroups: {
         common: {
           test: (module, chunks)=> {
-            const regExpIncludes = new RegExp(config.splitChunksCommon.includes.join('|'));
-            const regExpExcludes = new RegExp(config.splitChunksCommon.excludes.join('|'));
-            return module.resource && module.resource.match(regExpIncludes) && !module.resource.match(regExpExcludes);
+            const includes = config.splitChunksCommon.includes;
+            const excludes = config.splitChunksCommon.excludes;
+            const resource = module.resource.replace(new RegExp(`\\${path.sep}`, 'g'), '/');
+            const regExpIncludes = new RegExp(includes.join('|'));
+            const regExpExcludes = new RegExp(excludes.join('|'));
+            return resource &&
+                   resource.match(regExpIncludes) &&
+                   (!excludes || excludes.length === 0 || !resource.match(regExpExcludes));
           },
-          name: config.splitChunksCommon.name,
+          name: config.splitChunksCommon.name.replace(/\//g, path.sep),
           chunks: 'all',
           enforce: true,
           // minChunks: 2,

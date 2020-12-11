@@ -40,7 +40,7 @@ const getFilePaths = (options, matchPatterns = null)=> {
     nodir: true
   }, options));
 
-  return matchPatterns? globule.match(matchPatterns, filePaths): filePaths;
+  return (matchPatterns? globule.match(matchPatterns, filePaths): filePaths).map((filePath)=> path.resolve(filePath));
 }
 
 // getGlobPatterns
@@ -142,7 +142,7 @@ const getWebpackAllTypesEntryFilePaths = (matchPatterns0 = null, matchPatterns1 
 // getRelativeFilePath
 // filePathをbaseDirからの相対パスにして返す
 const getRelativeFilePath = (filePath, baseDir)=> {
-  const relativeFilePath = filePath.replace(baseDir, '').replace(new RegExp(`^${path.sep}`), '');
+  const relativeFilePath = filePath.replace(baseDir, '').replace(new RegExp(`\\${path.sep}`, 'g'), '/');
   return relativeFilePath;
 }
 

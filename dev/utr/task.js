@@ -142,6 +142,7 @@ const tasks = {
       // copy only
       filePaths.map((filePath)=> {
         const dist = filePath.replace(srcDir, publishDir);
+        console.log(filePath);
         distFilePaths.push(dist);
         promises.push(
           tasks.copy({ src: getRelativeFilePath(filePath, srcDir) }, [ 'html' ])

@@ -132,7 +132,7 @@ const config = {
   splitChunksCommon: {
     name: `${ASSETS_DIR_NAME}/js/lib`,
     includes: [
-      '/node_modules/',
+      'node_modules',
       // `${ASSETS_DIR_NAME}/js/_modules`,
     ],
     excludes: [

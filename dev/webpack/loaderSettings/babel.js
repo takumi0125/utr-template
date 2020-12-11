@@ -19,6 +19,7 @@ module.exports = (env)=> {
             corejs: 3,
             useBuiltIns: "usage",
             targets: {
+              node: 'current',
               browsers: config.targetBrowsers
             }
           }
