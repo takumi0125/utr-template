@@ -142,7 +142,9 @@ const getWebpackAllTypesEntryFilePaths = (matchPatterns0 = null, matchPatterns1 
 // getRelativeFilePath
 // filePathをbaseDirからの相対パスにして返す
 const getRelativeFilePath = (filePath, baseDir)=> {
-  const relativeFilePath = filePath.replace(baseDir, '').replace(new RegExp(`\\${path.sep}`, 'g'), '/');
+  const relativeFilePath = filePath.replace(baseDir, '')
+  .replace(new RegExp(`\\${path.sep}`, 'g'), '/')
+  .replace(/^\//, '');
   return relativeFilePath;
 }
 
