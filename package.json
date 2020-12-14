@@ -15,6 +15,9 @@
     "dev": "yarn start"
   },
   "author": "unshift (Takumi Hasegawa)",
+  "resolutions": {
+    "pug-inheritance/pug-dependency/pug-lexer": "3.1.0"
+  },
   "dependencies": {
     "@babel/core": "^7.12.10",
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
