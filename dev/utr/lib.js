@@ -62,24 +62,10 @@ const getGlobPatternsByName = (name, withIncludeFiles = false)=> {
   return getGlobPatterns(patterns, withIncludeFiles);
 }
 
-// getWebapckEntryKey
-// filePath, srcDirからwebpackのentryのkeyを返す
-const getWebapckEntryKey = (filePath, srcDir, excrusionPrefix = '_')=> {
-  const relativeFilePath = getRelativeFilePath(filePath, srcDir);
-
-  if(path.basename(path.dirname(relativeFilePath)).indexOf(excrusionPrefix) == 0) {
-    // dirnameの先頭にアンスコがついていたらtype1
-    return getWebpackEntrykeyType1(relativeFilePath);
-  } else {
-    // type0
-    return getWebpackEntrykeyType0(relativeFilePath);
-  }
-}
-
 // getWebpackEntrykeyType0
 // 相対パスからtype0のkeyを返す
 const getWebpackEntrykeyType0 = (relativeFilePath)=> {
-  return relativeFilePath.replace(new RegExp(`\.(${config.jsTranspileExts.join('|')})$`), '.js');
+  return relativeFilePath.replace(new RegExp(`\.(${config.toJsExts.join('|')})$`), '.js');
 }
 
 // getWebpackEntrykeyType1
@@ -153,7 +139,7 @@ const getRelativeFilePath = (filePath, baseDir)=> {
 // ただし、envがdevelopomentの際はminifyしないので常にfalse
 // nameは css or js or html
 const getMinifyOption = (name)=> {
-  return (utr.getEnv() == 'production') && config.minify[name];
+  return (config.mode === 'production') && config.minify[name];
 }
 
 // getSassGraphResult
@@ -161,7 +147,7 @@ const getMinifyOption = (name)=> {
 const getSassGraphResult = ()=> {
   return sassGraph.parseDir(srcDir,  {
     loadPaths: [ srcDir ] ,
-    extensions: config.cssTranspileExts
+    extensions: config.toCssExts
   }).index;
 }
 
@@ -210,7 +196,9 @@ const webpackCallback = (error, stats, logTaskNames = [ 'js' ], reload = false)=
 
   if(stats.hasErrors()) {
     // compilation errors
-    utr.error(logTaskNames, info.errors.toString());
+    for (const error of info.errors) {
+      utr.error(logTaskNames, error.stack);
+    }
   }
 
   if (stats.hasWarnings()) {
@@ -236,7 +224,6 @@ const webpackCallback = (error, stats, logTaskNames = [ 'js' ], reload = false)=
 // webpack.runタスクを生成
 // typeは 0 or 1 (getWebpackEntryFilePathsを参照)
 const makeWebpackBuildTask = async (type)=> {
-  const env = utr.getEnv();
   const entries = getWebpackEntryFilePaths(type);
 
   return new Promise((resolve, reject)=> {
@@ -245,7 +232,7 @@ const makeWebpackBuildTask = async (type)=> {
       return;
     }
 
-    const webpackCompiler = webpack(webpackConfig(env, entries));
+    const webpackCompiler = webpack(webpackConfig(entries));
 
     webpackCompiler.run((error, stats)=> {
       webpackCallback(error, stats, [ 'js' ]);
@@ -258,8 +245,6 @@ const makeWebpackBuildTask = async (type)=> {
 // webpack.watchタスクを生成
 // matchPatterns0, matchPatterns1についてはgetWebpackAllTypesEntryFilePathsを参照
 const makeWebpackWatchTask = (matchPatterns0 = null, matchPatterns1 = null)=> {
-  const env = utr.getEnv();
-
   let entries = getWebpackAllTypesEntryFilePaths(matchPatterns0, matchPatterns1);
   if(!entries) return { promises: null, watching: null };
 
@@ -273,13 +258,13 @@ const makeWebpackWatchTask = (matchPatterns0 = null, matchPatterns1 = null)=> {
     });
   }
 
-  const webpackCompiler = webpack(webpackConfig(env, entries));
+  const webpackCompiler = webpack(webpackConfig(entries));
 
   const promise = new Promise((resolve)=> {
       if(config.hmr) return resolve();
 
       webpackCompiler.watch(
-        { ignored: [ /node_modules/ ] },
+        { ignored: /node_modules/ },
         (error, stats)=> {
           webpackCallback(error, stats, [ 'watch', 'js' ], true);
           resolve();
@@ -335,7 +320,6 @@ module.exports = {
   getFilePaths,
   getGlobPatterns,
   getGlobPatternsByName,
-  getWebapckEntryKey,
   getWebpackEntryFilePaths,
   getWebpackAllTypesEntryFilePaths,
   getRelativeFilePath,

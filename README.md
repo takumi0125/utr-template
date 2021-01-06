@@ -86,11 +86,17 @@ yarn dev
 ```
 yarn build
 ```
-本番ビルドの場合 (--env production) でかつ `config.minify` の各値がtrueの場合、ファイルが圧縮されます。<br>
+本番ビルドの場合 (NODE_ENV=production) でかつ `config.minify` の各値がtrueの場合、ファイルが圧縮されます。<br>
 納品ファイル作成時はこのコマンドを実行します。
 ```
 yarn build:prd
 ```
+
+### dist
+```
+yarn build:prd
+```
+と同等です。
 
 ### watch
 ファイルの変更を監視し、変更があった場合に必要なタスクを実行します。<br>
@@ -98,7 +104,7 @@ yarn build:prd
 ```
 yarn watch
 ```
-本番ビルド (--env production) でかつ `config.minify` の各値がtrueの場合、ファイルが圧縮されます。
+本番ビルド (NODE_ENV=production) でかつ `config.minify` の各値がtrueの場合、ファイルが圧縮されます。
 ```
 yarn watch:prd
 ```
@@ -137,16 +143,16 @@ package.jsonのscriptsに定義してあるタスクは上記のみですが、�
 
 ソースディレクトリ内のpugファイルをコンパイルして公開ディレクトリに展開します。
 
-* 本番ビルド (--env production) でかつ `config.minify.html` の各値がtrue (非推奨)の場合、ファイルが圧縮されます。
+* 本番ビルド (NODE_ENV=production) でかつ `config.minify.html` の各値がtrue (非推奨)の場合、ファイルが圧縮されます。
 * 拡張子は `config.globPatterns.pug` でマッチしたものを処理)
 
 ## sass
 
 ソースディレクトリ内のcss/sass/scssファイルをコンパイルして公開ディレクトリに展開します。
 
-* <a href="https://www.npmjs.com/package/node-sass" target="_blank">node-sass</a> → <a href="https://www.npmjs.com/package/postcss" target="_blank">PostCSS</a> (<a href="https://www.npmjs.com/package/autoprefixer" target="_blank">autoprefixer</a> + <a href="https://www.npmjs.com/package/css-mqpacker" target="_blank">css-mqpacker</a>)で処理します。
-* 開発ビルド (--env development) の場合、sourcemapが生成されます。
-* 本番ビルド (--env production) でかつ `config.minify.css` の各値がtrueの場合、ファイルが圧縮されます。
+* <a href="https://www.npmjs.com/package/dart-sass" target="_blank">dart-sass</a> → <a href="https://www.npmjs.com/package/postcss" target="_blank">PostCSS</a> (<a href="https://www.npmjs.com/package/autoprefixer" target="_blank">autoprefixer</a> + <a href="https://www.npmjs.com/package/postcss-sort-media-queries" target="_blank">postcss-sort-media-queries</a>)で処理します。
+* 開発ビルド (NODE_ENV=development) の場合、sourcemapが生成されます。
+* 本番ビルド (NODE_ENV=production) でかつ `config.minify.css` の各値がtrueの場合、ファイルが圧縮されます。
 * 拡張子は `config.globPatterns.sass` でマッチしたものを処理
 
 ## js
@@ -154,9 +160,9 @@ package.jsonのscriptsに定義してあるタスクは上記のみですが、�
 ソースディレクトリ内の対象ファイルを<a href="https://webpack.js.org/" target="_blank">webpack</a>でコンパイルして公開ディレクトリに展開します。
 
 * js, jsx (react), vueファイルは<a href="https://www.npmjs.com/package/babel-loader" target="_blank">babel-loader</a>を使用します。
-* ts, tsxは<a href="https://www.npmjs.com/package/ts-loader" target="_blank">ts-loader</a>を使用してコンパイルします。
-* 開発ビルド (--env development) の場合、sourcemapが生成されます。
-* 本番ビルド (--env production) でかつ `config.minify.js` の各値がtrueの場合、ファイルが圧縮されます。
+* ts, tsxは<a href="https://www.npmjs.com/package/ts-loader" target="_blank">ts-loader</a>を使用してコンパイルし、その後babelでコンパイルします。
+* 開発ビルド (NODE_ENV=development) の場合、sourcemapが生成されます。
+* 本番ビルド (NODE_ENV=production) でかつ `config.minify.js` の各値がtrueの場合、ファイルが圧縮されます。
 * TypeScriptの設定ファイルは `dev/tsconfig.json` です。
 * webpackの詳しい設定は `dev/webpack/config.js` に記述されています。
 
@@ -201,8 +207,14 @@ includesは切り出すモジュールのディレクトリ名の配列です。
 前述の通り、一通り必要なタスクをすべて実行します。
 
 * cleanタスク実行後、html, pug, sass, jsタスクを並列実行します。
-* html, pug, sass, jsタスクのminify, sourcemap設定は各タスク同様、実行モード (--env development | production)に依存します。
+* html, pug, sass, jsタスクのminify, sourcemap設定は各タスク同様、実行モード (NODE_ENV=development | production)に依存します。
 * yarn build:prd` で本番ビルド実行 (納品ファイル作成時はこのコマンドを実行します。)
+
+## dist
+```
+yarn build:prd
+```
+と同等のコマンドです。
 
 ## watch
 
@@ -226,32 +238,15 @@ Reactで使用したい場合は、コード内で然るべき対応を取りま
 逐次リロードしてください。
 
 
-## start
+## start (またはdev)
 
 前述では build + watchとしていますが、webpackではwatchを実行するとビルドが走る仕様のため、以下のようなタスク構成となっています。
 
 * cleanタスク実行後、html, pug, sass並列実行します。その後、watchタスクを実行します。
 * clean後にjsタスクを実行しないのは、webpack.watch実行時にビルドが実行されるためです。
-* html, pug, sass, jsタスクのminify, sourcemap設定は各タスク同様、実行モード (--env development | production)に依存します。
+* html, pug, sass, jsタスクのminify, sourcemap設定は各タスク同様、実行モード (NODE_ENV=development | production)に依存します。
 * yarn watch:prd` で本番ビルドでwatchできます。
 
-# npmから実行する場合
-
-npmから実行する場合、Yarnで使用している selective dependency resolutions という機能が使えないため、pug-inheritanceがエラーを吐くことがあります。
-
-具体的にはpugにおいて、「: (セミコロン)」から始まる属性値を記述すると、エラーになります。
-
-```
-// この記述がエラーになります。
-transition(name="fuga" :duration="hoge")
-```
-
-どうしてもnpmを使用する場合は、セミコロンを含む属性名をダブルクォートで囲んでください。
-
-```
-// エラーを回避できます。
-transition(name="fuga" ":duration"="hoge")
-```
 
 ## selective dependency resolutions
 

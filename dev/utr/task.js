@@ -11,11 +11,11 @@ const htmlMinifier = require('html-minifier').minify;
 
 const pug = require('pug');
 
-const sass = require('node-sass');
+const sass = require('sass');
 const postcss = require('postcss');
 const autoprefixer = require('autoprefixer');
 const cssnano = require('cssnano');
-const mqpacker = require('css-mqpacker');
+const sortMediaQueries = require('postcss-sort-media-queries');
 
 const {
   getFilePaths,
@@ -26,7 +26,6 @@ const {
   getSassGraphResult,
   getSassGraphFiles,
   getPugInheritanceFiles,
-  getWebapckEntryKey,
   makeWebpackBuildTask,
   makeWebpackWatchTask,
   makeWatchTask
@@ -36,7 +35,7 @@ const {
 // watchタスクの deleted/renamed イベント時のデフォルト実行処理
 const watchOnDeleteDefault = (taskName, eventName, filePath, renamedfilePath = '')=> {
   const fromExt = path.extname(filePath).replace('.', '');
-  const toExt = config.transpileExtsTable[fromExt];
+  const toExt = config.destExtsTable[fromExt];
   let clearFilePath = getRelativeFilePath(renamedfilePath || filePath, srcDir);
   if(toExt) clearFilePath = clearFilePath.replace(new RegExp(`${fromExt}$`), toExt);
   tasks.clean({ src: clearFilePath }, [ 'watch', taskName, 'clean' ]);
@@ -142,7 +141,6 @@ const tasks = {
       // copy only
       filePaths.map((filePath)=> {
         const dist = filePath.replace(srcDir, publishDir);
-        console.log(filePath);
         distFilePaths.push(dist);
         promises.push(
           tasks.copy({ src: getRelativeFilePath(filePath, srcDir) }, [ 'html' ])
@@ -157,8 +155,8 @@ const tasks = {
   // pugをコンパイルしてpublishDirに展開するタスク
   pug: async(options = {})=> {
     const promises = [];
-    const metaData = require(config.metaDataJson)(utr.getEnv());
-    metaData.data = config.defineData[utr.getEnv()];
+    const metaData = require(config.metaDataJson)();
+    metaData.data = config.defineData[config.mode];
     const distFilePaths = [];
 
     getFilePaths({ src: options.src || getGlobPatternsByName('pug') })
@@ -211,8 +209,8 @@ const tasks = {
       }
       const postcssProcessOptions = { from: filePath, to: dist };
       const postcssPlugins = [
-        autoprefixer(config.autoprefixerOpt),
-        mqpacker()
+        sortMediaQueries(),
+        autoprefixer(config.autoprefixerOpt)
       ];
 
       if(cssMinifyOption) {

@@ -1,13 +1,13 @@
 <template lang="pug">
-  div.test
-    |Vue module
+  div.test2
+    |Vue module?
 </template>
 
 <style lang="scss" scoped>
-.test {
+.test2 {
   width: 100px;
   height: 100px;
-  background-color: #ffff00;
+  background-color: #ff0000;
 }
 </style>
 

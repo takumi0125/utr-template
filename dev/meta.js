@@ -1,16 +1,16 @@
 const config = {
   default: {
     siteUrl: 'https://dev.sample.jp/',
-    
+
     showOGP: true, // ogpタグを表示するかどうか
-    
-    // author: ''
-    // copyright: ''
-    
+
+    author: '',
+    copyright: '',
+
     siteTitle: 'sample',
     useTitleAsOgTitle: true, // ogTitleをtitleと同じにするかどうか
     ogTitle: '',
-    useTitleSeparater: true,
+    useTitleSeparater: true, // タイトルのセパレータ デフォルトで`${title}${useTitleSeparater}${siteTitle}` となる
     titleSeparater: ' | ',
 
     keywords: 'sample keywords',
@@ -37,7 +37,7 @@ const config = {
     twitterCardTitle: '',
     twitterCardDesc: '',
     twitterCardImg: '',
-    
+
     favicons: {
       default: '/assets/img/icon/favicon.ico'
       // "96x96": '/assets/img/icon/favicon-96.png'
@@ -57,11 +57,11 @@ const config = {
       // "180x180": '/assets/img/icon/apple-touch-icon-180.png'
     },
 
-    
+
     manifestJson: '/assets/img/icon/manifest.json',
-    
+
     themeColor: '#ffffff',
-    
+
     maskIcon: {
       svg: '',
       color: '#000000'
@@ -70,10 +70,9 @@ const config = {
     msAppTitleColor: '#ffffff'
   },
 
-  production: {
-    siteUrl: 'https://sample.jp/',
-    ogImage: 'https://sample.jp/assets/img/ogp.png'
-  }
+  // envがdevelopmentやproductionの場合に上書きする際は適宜定義する
+  // development: {},
+  // production: {},
 };
 
 module.exports = (env)=> {

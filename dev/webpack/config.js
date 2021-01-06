@@ -2,47 +2,55 @@
 const path = require('path');
 const webpack = require('webpack');
 const WriteFilePlugin = require('write-file-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
-const TerserPlugin = require('terser-webpack-plugin');
-
 // loader settings
-const babelLoaderSettings = require('./loaderSettings/babel.js');
-const tsLoaderSettings = require('./loaderSettings/ts.js');
-const sassLoaderSettings = require('./loaderSettings/sass.js');
-const cssLoaderSettings = require('./loaderSettings/css.js');
+const babelLoaderSettings   = require('./loaderSettings/babel.js'  );
+const tsLoaderSettings      = require('./loaderSettings/ts.js'     );
+const sassLoaderSettings    = require('./loaderSettings/sass.js'   );
+const cssLoaderSettings     = require('./loaderSettings/css.js'    );
 const postCSSLoaderSettings = require('./loaderSettings/postcss.js');
 
 const config = require('../config.js');
 
-// src and publish path (resolved)
-const srcDir = path.resolve(config.srcDir);
-const publishDir = path.resolve(config.publishDir);
+const jsExcludedModulesRegExp = new RegExp(`node_modules\\${path.sep}(?!(${config.transpileNodeModules.join('|')})\\${path.sep}).*`);
 
-module.exports = (env, entry)=> {
+console.log(config.resolvedSrcDir);
+module.exports = (entry)=> {
+  const mode = config.mode;
+  const isDev = mode === 'development';
+
   const webpackConfig = {
+    mode,
+
     entry,
 
-    context: srcDir,
+    context: config.resolvedSrcDir,
+
+    // cache: {
+    //   type: 'filesystem',
+    //   buildDependencies: {
+    //     config: [__filename]
+    //   }
+    // },
 
     output: {
-      path: publishDir,
+      path: config.resolvedPublishDir,
       filename: '[name]',
       chunkFilename: '[name].js',
       publicPath: '/'
     },
 
-    mode: env || 'development',
-
-    devtool: env === 'development'? 'source-map': 'none',
+    devtool: isDev? 'source-map': 'none',
 
     devServer: {
-      hot: env === 'development'
+      hot: isDev && config.hmr
     },
 
     resolve: {
       extensions: [ '.js', '.jsx', '.vue', '.ts', '.tsx', '.glsl', '.vert', '.frag' ],
-      alias: {}
+      alias: config.webpackResolveAlias || {}
     },
 
     module: {
@@ -50,19 +58,19 @@ module.exports = (env, entry)=> {
         // js/jsx
         {
           test: /\.(js|jsx)$/,
-          exclude: new RegExp(`node_modules\\${path.sep}(?!(${config.jsNodeModuleExcludes.join('|')})\\${path.sep}).*`),
+          exclude: jsExcludedModulesRegExp,
           use: [
-            babelLoaderSettings(env)
+            babelLoaderSettings
           ]
         },
 
         // ts/tsx
         {
           test: /\.(ts|tsx)$/,
-          exclude: new RegExp(`node_modules\\${path.sep}(?!(${config.jsNodeModuleExcludes.join('|')})\\${path.sep}).*`),
+          exclude: jsExcludedModulesRegExp,
           use: [
-            babelLoaderSettings(env),
-            tsLoaderSettings(env)
+            babelLoaderSettings,
+            tsLoaderSettings
           ]
         },
 
@@ -73,16 +81,26 @@ module.exports = (env, entry)=> {
         },
 
         //  json
-        { test: /\.json$/, use: [ 'json-loader' ], type: "javascript/auto" },
+        {
+          test: /\.json$/,
+          use: [ 'json-loader' ],
+          type: "javascript/auto"
+        },
 
         //  glsl
-        { test: /\.(glsl|vert|frag)$/, use: [ 'raw-loader', 'glslify-loader' ] },
+        {
+          test: /\.(glsl|vert|frag)$/,
+          use: [
+            'raw-loader',
+            'glslify-loader'
+          ]
+        },
 
         // pug
         {
           test: /\.pug$/,
           oneOf: [
-            // for <template lang="pug">
+            // for vue <template lang="pug">
             {
               resourceQuery: /^\?vue/,
               use: [ 'pug-plain-loader' ]
@@ -95,22 +113,23 @@ module.exports = (env, entry)=> {
         {
           test: /\.(css|sass|scss)$/,
           oneOf: [
-            // for <template lang="scss">
+            // for vue <style lang="scss">
             {
               resourceQuery: /^\?vue/,
               use: [
                 'vue-style-loader',
-                cssLoaderSettings(env, 2),
-                sassLoaderSettings(env),
-                postCSSLoaderSettings(env)
+                cssLoaderSettings,
+                postCSSLoaderSettings,
+                sassLoaderSettings
               ]
             },
+            // for react CSS Module
             {
               use: [
                 'style-loader',
-                cssLoaderSettings(env, 2, true),
-                sassLoaderSettings(env),
-                postCSSLoaderSettings(env)
+                Object.assign({}, cssLoaderSettings, { options: { modules: true } }),
+                postCSSLoaderSettings,
+                sassLoaderSettings
               ]
             }
           ]
@@ -120,27 +139,29 @@ module.exports = (env, entry)=> {
 
     plugins: [
       new WriteFilePlugin(),
-
       new VueLoaderPlugin(),
 
       // define
       new webpack.DefinePlugin({
         ENV: JSON.stringify({
-          env,
+          mode,
           projectName: config.projectName,
-          data: config.defineData[env]
+          data: config.defineData[mode]
         })
-      })
+      }),
     ],
 
-    optimization: {}
+    optimization: {
+    }
   };
 
-  if(env !== 'production' && config.hmr) {
+  // HMR
+  if(mode === 'development' && config.hmr) {
     webpackConfig.plugins.push(new webpack.HotModuleReplacementPlugin());
     webpackConfig.resolve.alias['react-dom'] = '@hot-loader/react-dom';
   }
 
+  // Split Chunks
   if(config.splitChunksCommon) {
     webpackConfig.optimization.splitChunks = {
       cacheGroups: {
@@ -148,6 +169,7 @@ module.exports = (env, entry)=> {
           test: (module, chunks)=> {
             const includes = config.splitChunksCommon.includes;
             const excludes = config.splitChunksCommon.excludes;
+            if(!module.resource) return false;
             const resource = module.resource.replace(new RegExp(`\\${path.sep}`, 'g'), '/');
             const regExpIncludes = new RegExp(includes.join('|'));
             const regExpExcludes = new RegExp(excludes.join('|'));
@@ -166,7 +188,8 @@ module.exports = (env, entry)=> {
     }
   }
 
-  if(env === 'production' && config.minify.js) {
+  // 圧縮
+  if(mode === 'production' && config.minify.js) {
     webpackConfig.optimization = {
       ...webpackConfig.optimization,
       minimize: true,

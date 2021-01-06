@@ -7,14 +7,14 @@ const browserSync = require('browser-sync').create();
 const webpackDevMiddleware = require('webpack-dev-middleware');
 const webpackHotMiddleware = require('webpack-hot-middleware');
 
-const url = require('url');
+const URL = require('url').URL;
 const proxy = require('proxy-middleware');
 
 module.exports = (()=> {
-  let env, tasks;
+  let tasks;
 
   const log = (taskNames, eventName = '', msg)=> {
-    const header = (Array.isArray(taskNames)? taskNames.map(taskName => `[${taskName}]`).join(' > '): taskNames) + ':';
+    const header = (Array.isArray(taskNames)? taskNames.map(taskName => `[${taskName}]`).join(' > '): `[${taskNames}]`) + ':';
     let methodName = eventName == 'error'? 'error': 'log';
     let eventChalk = chalk.bold.green;
     let msgChalk = chalk.gray;
@@ -74,10 +74,6 @@ module.exports = (()=> {
       return Promise.all(promises);
     },
 
-    setEnv: value => env = value,
-
-    getEnv: ()=> env,
-
     setTasks: value => tasks = value,
 
     getTasks: ()=> tasks,
@@ -92,8 +88,8 @@ module.exports = (()=> {
 
       const middleware = [];
 
-      if(apiMiddlewareProxySettings) {
-        const proxyOptions = url.parse(apiMiddlewareProxySettings.url);
+      if(apiMiddlewareProxySettings && apiMiddlewareProxySettings.useProxy) {
+        const proxyOptions = new URL(apiMiddlewareProxySettings.url);
         proxyOptions.route = apiMiddlewareProxySettings.route;
         proxyOptions.cookieRewrite = apiMiddlewareProxySettings.cookieRewrite;
 
@@ -103,7 +99,8 @@ module.exports = (()=> {
         middleware.push(proxy(proxyOptions));
       }
 
-      if(env !== 'production' && hmr) {
+      const mode = process.env.NODE_ENV || 'development';
+      if(mode === 'development' && hmr) {
         const webpackDevMiddlewareInstance = new webpackDevMiddleware(webpackCompiler);
         webpackDevMiddlewareInstance.waitUntilValid(()=> {
           callback();
@@ -114,7 +111,7 @@ module.exports = (()=> {
         middleware.push(webpackDevMiddlewareInstance);
 
         if(apiMiddlewareProxySettings) {
-          const proxyOptions = url.parse(apiMiddlewareProxySettings.url);
+          const proxyOptions = new URL(apiMiddlewareProxySettings.url);
           proxyOptions.route = apiMiddlewareProxySettings.route;
           proxyOptions.cookieRewrite = apiMiddlewareProxySettings.cookieRewrite;
 
