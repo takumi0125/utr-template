@@ -6,7 +6,7 @@ module.exports = (env)=> {
     'transform-react-pug'
   ];
 
-  // if(env === 'development') plugins.unshift('react-hot-loader/babel');
+  if(env === 'development') plugins.unshift('react-hot-loader/babel');
 
   return {
     loader: 'babel-loader',
