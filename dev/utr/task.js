@@ -269,7 +269,7 @@ const tasks = {
         if(postcssResult.map) {
           const sourcemapPath = dist.replace(/\.css$/, '.css.map');
           fsPromises.push(
-            fs.outputFile(sourcemapPath, postcssResult.map)
+            fs.outputFile(sourcemapPath, postcssResult.map.toString())
             .then(()=> {
               distFilePaths.push(sourcemapPath);
               utr.log('sass', 'build', sourcemapPath)
