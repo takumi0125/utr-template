@@ -77,7 +77,7 @@
     "dat.gui": "^0.7.7",
     "glsl-easings": "^1.0.0",
     "glsl-noise": "^0.0.0",
-    "gsap": "^3.5.1",
+    "gsap": "^3.6.0",
     "mobile-detect": "^1.4.4",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
